@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Hardcoded path to the tool
+COMMAND_PATH="$HOME/.local/bin/librepods-ctl"
+STATE_FILE="/tmp/librepods_anc_active"
+LOG_FILE="/tmp/librepods_debug.log"
+
+# Check if the command actually exists at that path before running
+if [ ! -f "$COMMAND_PATH" ]; then
+  notify-send "Librepods Error" "Tool not found at $COMMAND_PATH" -u critical
+  exit 1
+fi
+
+if [ -f "$STATE_FILE" ]; then
+  # Switch to Transparency
+  "$COMMAND_PATH" noise:transparency >>"$LOG_FILE" 2>&1
+
+  if [ $? -eq 0 ]; then
+    rm "$STATE_FILE"
+    notify-send "Librepods" "Mode: Transparency" -i audio-headphones
+  else
+    notify-send "Librepods" "Failed to set Transparency" -u critical
+  fi
+else
+  # Switch to ANC
+  "$COMMAND_PATH" noise:anc >>"$LOG_FILE" 2>&1
+
+  if [ $? -eq 0 ]; then
+    touch "$STATE_FILE"
+    notify-send "Librepods" "Mode: ANC" -i audio-headphones
+  else
+    notify-send "Librepods" "Failed to set ANC" -u critical
+  fi
+fi
